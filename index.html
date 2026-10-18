@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>ARCANE LOG — 마법 조합 로그라이크</title>
+<style>
+:root{--bg:#090d1b;--panel:#111a30;--panel2:#182441;--line:#304267;--text:#eef4ff;--muted:#9eafd0;--gold:#ffd36a;--cyan:#72e6ff;--purple:#c59aff;--red:#ff687d}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;touch-action:pan-x pan-y}
+button{font:inherit;color:inherit;border:1px solid var(--line);background:#202e4d;border-radius:12px;padding:10px 14px;cursor:pointer;transition:.12s}
+button:hover{filter:brightness(1.15)}button:active{transform:scale(.98)}button:disabled{opacity:.45;cursor:not-allowed}
+.primary{background:linear-gradient(135deg,#6c54d9,#2879b9);border-color:#7b8dff;font-weight:800}.gold{background:linear-gradient(135deg,#8c5b1e,#c38a2e);border-color:#f1c96c}.danger{background:#57243b;border-color:#a64b67}.small{padding:6px 9px;font-size:12px}.hidden{display:none!important}
+#app{position:relative;width:100%;height:100%;overflow:hidden;background:radial-gradient(ellipse at 50% 20%,#172346 0,#090d1b 65%)}
+.screen{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}
+.menu-card{width:min(900px,100%);max-height:100%;overflow:auto;background:linear-gradient(150deg,rgba(20,30,56,.97),rgba(9,14,29,.98));border:1px solid #394c77;border-radius:24px;padding:clamp(16px,3vw,30px);box-shadow:0 20px 80px #0009}
+.logo{text-align:center;font-size:clamp(32px,7vw,66px);letter-spacing:.12em;font-weight:1000;background:linear-gradient(90deg,#e7f8ff,#9c9dff,#ffdb8a);color:transparent;background-clip:text;text-shadow:0 0 40px #6e8cff25}
+.subtitle{text-align:center;color:#aabce4;margin:6px 0 20px}
+.mode-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.mode{min-height:130px;text-align:left;padding:18px;background:linear-gradient(145deg,#202e51,#111a30);border-radius:16px}.mode.selected{outline:3px solid #8e91ff;background:linear-gradient(145deg,#35366c,#172848)}.mode .emoji{font-size:32px}.mode strong{display:block;font-size:20px;margin:5px 0}.mode small{color:var(--muted);line-height:1.5}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.between{justify-content:space-between}.muted{color:var(--muted)}.tiny{font-size:12px;color:var(--muted)}.pill{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);background:#182442;border-radius:99px;padding:5px 9px;font-size:12px}
+#gameScreen{position:absolute;inset:0;display:none;background:#090d1b}#gameCanvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#hud{position:absolute;top:0;left:0;right:0;padding:10px 12px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;pointer-events:none}
+.hud-left,.hud-right{display:flex;gap:7px;flex-wrap:wrap;max-width:48%}.hud-chip{background:#0b1227dd;border:1px solid #3a4d77;border-radius:10px;padding:7px 10px;font-size:12px;box-shadow:0 4px 12px #0004}.hud-chip b{color:#fff}
+#hpBar{width:160px;height:9px;border-radius:9px;background:#42283b;overflow:hidden;margin-top:5px}#hpFill{height:100%;width:100%;background:linear-gradient(90deg,#ff526d,#ff9c86)}
+#xpWrap{position:absolute;left:0;right:0;bottom:0;height:5px;background:#182440;z-index:3}#xpFill{height:100%;width:0;background:linear-gradient(90deg,#64d9ff,#c59aff)}
+#gameButtons{position:absolute;right:12px;top:65px;display:flex;gap:6px;pointer-events:auto;flex-wrap:wrap;justify-content:flex-end;max-width:55%}#gameButtons button{padding:7px 10px;background:#0e1830dd;font-size:12px}
+#touchControls{position:absolute;inset:0;pointer-events:none;display:none;user-select:none;-webkit-user-select:none}
+#stickBase{position:absolute;left:22px;bottom:30px;width:130px;height:130px;border-radius:50%;background:#dbe8ff18;border:2px solid #dbe8ff55;pointer-events:auto;touch-action:none}
+#stickKnob{position:absolute;width:54px;height:54px;left:36px;top:36px;border-radius:50%;background:#d5e6ff88;border:2px solid #fff9;box-shadow:0 0 18px #9edbff44}
+.touch-actions{position:absolute;right:20px;bottom:24px;display:grid;grid-template-columns:repeat(2,70px);gap:10px;pointer-events:auto}
+.touch-actions button{height:64px;border-radius:50%;font-size:13px;font-weight:800;padding:4px;background:#17264ddd;border:2px solid #8b9fdc;touch-action:none;box-shadow:0 4px 16px #0006}
+.touch-actions .attack{background:#5c2f74dd;border-color:#e0a8ff}.touch-actions .dash{background:#1d5471dd;border-color:#8ceaff}
+#modalLayer{position:absolute;inset:0;background:#030713aa;display:none;align-items:center;justify-content:center;padding:12px;z-index:10}
+.modal{width:min(760px,100%);max-height:90%;overflow:auto;background:linear-gradient(145deg,#172342,#0c1327);border:1px solid #465b8b;border-radius:20px;padding:18px;box-shadow:0 18px 70px #000b}
+.modal h2{margin:0 0 6px}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin-top:14px}.pick-card{padding:13px;text-align:left;min-height:125px;background:linear-gradient(145deg,#26365a,#141e38)}.pick-card .icon{font-size:27px}.pick-card b{display:block;margin:5px 0}.pick-card small{color:#b7c5e4;line-height:1.4}.rarity-일반{border-color:#6c7b99}.rarity-희귀{border-color:#5ab8df}.rarity-영웅{border-color:#aa7dff}.rarity-전설{border-color:#ffbd59;box-shadow:inset 0 0 20px #ffbd5910}.rarity-신화{border-color:#ff688e;box-shadow:inset 0 0 20px #ff688e12}.rarity-초월{border-color:#fff1a1;box-shadow:inset 0 0 24px #b69aff24}
+#toast{position:absolute;left:50%;top:18%;transform:translateX(-50%);background:#111c34ee;border:1px solid #8199cf;border-radius:12px;padding:10px 16px;z-index:20;display:none;text-align:center;max-width:90%;box-shadow:0 8px 30px #0008}
+#levelBanner{position:absolute;left:50%;top:27%;transform:translate(-50%,-50%);font-size:clamp(24px,5vw,42px);font-weight:1000;color:#ffe58b;text-shadow:0 0 22px #ffae42;display:none;z-index:5;pointer-events:none}
+@media(max-width:700px){.menu-card{border-radius:18px}.mode{padding:12px;min-height:118px}.mode strong{font-size:17px}.hud-chip{padding:6px 8px;font-size:11px}.hud-left,.hud-right{max-width:55%}#gameButtons{top:72px;max-width:65%}#stickBase{width:112px;height:112px;left:14px;bottom:18px}#stickKnob{left:29px;top:29px;width:50px;height:50px}.touch-actions{right:12px;bottom:14px;grid-template-columns:repeat(2,61px);gap:7px}.touch-actions button{height:58px;font-size:11px}}
+@media(orientation:portrait) and (max-width:700px){#rotateHint{display:block!important}}
+#rotateHint{display:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#080e20ee;border:1px solid #6d81b1;border-radius:14px;padding:12px 16px;z-index:30;text-align:center;pointer-events:none}
+</style>
+</head>
+<body>
+<div id="app">
+  <section id="startScreen" class="screen">
+    <div class="menu-card">
+      <div class="logo">ARCANE LOG</div>
+      <div class="subtitle">마법을 발견하고, 융합하고, 초월하라</div>
+      <div class="row between" style="margin-bottom:12px"><b>플레이 모드를 선택해</b><span class="pill">저장 자동 지원</span></div>
+      <div class="mode-grid">
+        <button class="mode selected" id="pcMode"><span class="emoji">🖥️</span><strong>컴퓨터 모드</strong><small>WASD 이동 · 마우스 조준/공격<br>Space 대시 · E 스킬 · 메뉴 클릭</small></button>
+        <button class="mode" id="tabletMode"><span class="emoji">📱</span><strong>태블릿 모드</strong><small>가상 조이스틱 이동<br>공격 · 대시 · 스킬 버튼 터치</small></button>
+      </div>
+      <div class="row" style="margin-top:16px">
+        <label class="muted" for="difficulty">난이도</label>
+        <select id="difficulty" style="flex:1;min-width:140px;background:#111a30;color:white;border:1px solid #40557d;border-radius:10px;padding:10px">
+          <option value="easy">모험가 (쉬움)</option><option value="normal" selected>마법사 (보통)</option><option value="hard">대마법사 (어려움)</option><option value="nightmare">악몽 (매우 어려움)</option>
+        </select>
+      </div>
+      <div class="row" style="margin-top:16px">
+        <button class="primary" id="startBtn" style="flex:1;font-size:18px;padding:14px">게임 시작</button>
+        <button id="continueBtn" style="flex:1;padding:14px">저장 불러오기</button>
+      </div>
+      <div class="row between" style="margin-top:15px">
+        <span class="tiny">20종 융합 마법 · 보스 10종 · 스킬 뽑기 · 영구 성장</span>
+        <button id="resetSave" class="small danger">저장 초기화</button>
+      </div>
+    </div>
+  </section>
+  <section id="gameScreen">
+    <canvas id="gameCanvas"></canvas>
+    <div id="hud">
+      <div class="hud-left">
+        <div class="hud-chip"><b id="levelText">Lv. 1</b><div id="hpBar"><div id="hpFill"></div></div><span id="hpText">100 / 100 HP</span></div>
+        <div class="hud-chip">🌀 <b id="stageText">던전 1</b><br><span id="waveText">웨이브 1</span></div>
+      </div>
+      <div class="hud-right">
+        <div class="hud-chip">💠 <b id="manaText">0</b></div>
+        <div class="hud-chip">💰 <b id="goldText">0</b></div>
+        <div class="hud-chip">☠ <b id="killText">0</b></div>
+      </div>
+    </div>
+    <div id="gameButtons">
+      <button id="pauseBtn">Ⅱ 일시정지</button><button id="spellBookBtn">✦ 마법</button><button id="summonBtn">🎲 뽑기</button><button id="codexBtn">📖 도감</button><button id="shopBtn">⬆ 성장</button>
+    </div>
+    <div id="touchControls">
+      <div id="stickBase"><div id="stickKnob"></div></div>
+      <div class="touch-actions"><button class="attack" id="touchAttack">✦<br>공격</button><button class="dash" id="touchDash">➤<br>대시</button><button id="touchSkill">✧<br>스킬</button><button id="touchMenu">☰<br>메뉴</button></div>
+    </div>
+    <div id="xpWrap"><div id="xpFill"></div></div>
+    <div id="levelBanner">LEVEL UP!</div>
+    <div id="rotateHint">📱 태블릿은 가로 화면으로 플레이하면 더 좋아요.</div>
+  </section>
+  <div id="modalLayer"><div class="modal" id="modal"></div></div>
+  <div id="toast"></div>
+</div>
+<script>
+(()=> {
+'use strict';
+const $=id=>document.getElementById(id);
+const canvas=$('gameCanvas'),ctx=canvas.getContext('2d');
+let W=innerWidth,H=innerHeight,DPR=1;
+function resize(){W=innerWidth;H=innerHeight;DPR=Math.min(devicePixelRatio||1,2);canvas.width=Math.floor(W*DPR);canvas.height=Math.floor(H*DPR);canvas.style.width=W+'px';canvas.style.height=H+'px';ctx.setTransform(DPR,0,0,DPR,0,0)}
+addEventListener('resize',resize);resize();
+
+const rarityWeights=[['일반',55.4],['희귀',28],['영웅',15],['전설',1],['신화',0.5],['초월',0.1]];
+const spells=[
+{id:'fire',name:'화염구',icon:'🔥',element:'화염',rarity:'일반',desc:'적을 향해 폭발하는 불덩이를 발사한다.',damage:22,cd:650,color:'#ff844d'},
+{id:'ice',name:'얼음 창',icon:'❄️',element:'얼음',rarity:'일반',desc:'빠른 얼음 창으로 적을 관통한다.',damage:17,cd:480,color:'#7ee6ff'},
+{id:'lightning',name:'번개',icon:'⚡',element:'번개',rarity:'희귀',desc:'가까운 적에게 번개를 내리친다.',damage:27,cd:800,color:'#ffe66e'},
+{id:'wind',name:'바람 칼날',icon:'🌪️',element:'바람',rarity:'일반',desc:'회전하는 바람 칼날을 발사한다.',damage:15,cd:400,color:'#9af5d1'},
+{id:'poison',name:'독 구름',icon:'☠️',element:'독',rarity:'희귀',desc:'적에게 지속 피해를 주는 독 구름.',damage:10,cd:1100,color:'#9cff6a'},
+{id:'arcane',name:'비전 광선',icon:'🔮',element:'비전',rarity:'영웅',desc:'직선상의 적을 꿰뚫는 비전 에너지.',damage:31,cd:1000,color:'#bd91ff'},
+{id:'earth',name:'대지 파동',icon:'🪨',element:'대지',rarity:'일반',desc:'땅을 울려 주변 적을 밀쳐낸다.',damage:24,cd:1200,color:'#c9ad80'},
+{id:'shadow',name:'암흑 구체',icon:'🌑',element:'암흑',rarity:'영웅',desc:'적을 약화시키는 어둠의 구체.',damage:29,cd:900,color:'#a28aff'},
+{id:'light',name:'빛의 화살',icon:'☀️',element:'빛',rarity:'희귀',desc:'빛의 화살로 적을 관통한다.',damage:23,cd:700,color:'#fff0a0'},
+{id:'spirit',name:'영혼 파편',icon:'👻',element:'영혼',rarity:'영웅',desc:'적을 추적하는 영혼 파편.',damage:26,cd:850,color:'#c3f7ff'},
+{id:'water',name:'물의 구체',icon:'💧',element:'물',rarity:'일반',desc:'물의 구체를 던져 적을 느리게 한다.',damage:18,cd:550,color:'#66baff'},
+{id:'meteor',name:'운석 강타',icon:'☄️',element:'화염/대지',rarity:'전설',desc:'거대한 운석으로 넓은 범위를 폭격한다.',damage:65,cd:2200,color:'#ff995c'},
+{id:'phoenix',name:'불사조 강림',icon:'🦅',element:'화염/영혼',rarity:'신화',desc:'불사조가 날아가며 적을 태우고 회복시킨다.',damage:85,cd:3000,color:'#ffd36a'},
+{id:'plasma',name:'플라즈마 폭발',icon:'💥',element:'화염/번개',rarity:'전설',desc:'폭발 후 전기가 주변 적에게 연쇄 전이된다.',damage:72,cd:2400,color:'#e8a4ff',fusion:true},
+{id:'froststorm',name:'빙결 폭풍',icon:'🌨️',element:'얼음/바람',rarity:'희귀',desc:'얼음 회오리가 적을 느리게 하고 피해를 준다.',damage:42,cd:1800,color:'#8be8ff',fusion:true},
+{id:'toxicfire',name:'맹독 화염',icon:'🧪',element:'독/화염',rarity:'전설',desc:'독성 불길이 바닥에 남아 지속 피해를 준다.',damage:56,cd:2000,color:'#b6ff73',fusion:true},
+{id:'collapse',name:'차원 붕괴',icon:'🕳️',element:'비전/번개',rarity:'신화',desc:'적을 끌어당긴 뒤 차원 폭발을 일으킨다.',damage:110,cd:3600,color:'#d8a3ff',fusion:true},
+{id:'steam',name:'증기 폭발',icon:'♨️',element:'화염/얼음',rarity:'희귀',desc:'뜨거운 증기가 퍼지며 적을 밀쳐낸다.',damage:38,cd:1600,color:'#f2c4ff',fusion:true},
+{id:'frostlightning',name:'서리 번개',icon:'🌩️',element:'얼음/번개',rarity:'영웅',desc:'감전과 빙결을 동시에 일으킨다.',damage:52,cd:1900,color:'#b3f7ff',fusion:true},
+{id:'darkflame',name:'암흑 화염',icon:'🖤',element:'화염/암흑',rarity:'전설',desc:'방어력을 약화시키는 검은 불꽃.',damage:61,cd:2100,color:'#c68aff',fusion:true},
+{id:'thorns',name:'가시 덩굴 폭주',icon:'🌿',element:'자연/대지',rarity:'영웅',desc:'덩굴이 솟아올라 적을 묶고 관통한다.',damage:48,cd:1800,color:'#8cff9a',fusion:true},
+{id:'sunbeam',name:'태양 광선',icon:'🌞',element:'빛/화염',rarity:'전설',desc:'직선상의 적을 관통하는 고위력 광선.',damage:75,cd:2500,color:'#fff0a0',fusion:true},
+{id:'gravity',name:'중력 소용돌이',icon:'🌀',element:'암흑/바람',rarity:'전설',desc:'주변의 적과 투사체를 중심으로 끌어당긴다.',damage:43,cd:2400,color:'#bc9aff',fusion:true},
+{id:'shield',name:'반사 결계',icon:'🛡️',element:'얼음/빛',rarity:'영웅',desc:'잠시 피해를 줄이고 적 투사체를 반사한다.',damage:0,cd:5000,color:'#a7eaff',fusion:true},
+{id:'dragon',name:'영혼 용격',icon:'🐉',element:'비전/영혼',rarity:'신화',desc:'용 형상의 에너지가 여러 적을 관통한다.',damage:95,cd:3000,color:'#7de7ff',fusion:true},
+{id:'bloodmoon',name:'혈월 폭발',icon:'🌘',element:'암흑/영혼',rarity:'신화',desc:'체력을 소모해 강력한 폭발을 일으킨다.',damage:125,cd:3200,color:'#ff7299',fusion:true},
+{id:'timefreeze',name:'시간 정지',icon:'⏳',element:'비전/얼음',rarity:'신화',desc:'주변 적의 움직임을 잠시 멈춘다.',damage:20,cd:5200,color:'#d5e7ff',fusion:true},
+{id:'blackhole',name:'블랙홀',icon:'⚫',element:'중력/차원',rarity:'신화',desc:'적들을 끌어당겨 압축한 뒤 폭발시킨다.',damage:155,cd:4500,color:'#bda2ff',fusion:true},
+{id:'judgment',name:'천상의 심판',icon:'⚔️',element:'태양/운석',rarity:'신화',desc:'빛의 검을 떨어뜨려 막대한 피해를 준다.',damage:180,cd:4800,color:'#ffe7a1',fusion:true},
+{id:'creation',name:'창세의 마법',icon:'🌌',element:'블랙홀/불사조',rarity:'초월',desc:'모든 속성을 폭발시키는 최종급 마법.',damage:260,cd:6000,color:'#fff3ba',fusion:true}
+];
+const fusionRecipes=[
+['fire','lightning','plasma'],['ice','wind','froststorm'],['poison','fire','toxicfire'],['arcane','lightning','collapse'],['fire','ice','steam'],
+['ice','lightning','frostlightning'],['fire','shadow','darkflame'],['earth','wind','thorns'],['light','fire','sunbeam'],['shadow','wind','gravity'],
+['ice','light','shield'],['arcane','spirit','dragon'],['shadow','spirit','bloodmoon'],['arcane','ice','timefreeze'],['gravity','collapse','blackhole'],
+['sunbeam','meteor','judgment'],['sunbeam','spirit','phoenix'],['froststorm','collapse','collapse'],['blackhole','phoenix','creation'],['meteor','earth','meteor']
+];
+const bosses=[
+['화염 군주','#ff784f','🔥'],['빙하 거인','#72dfff','❄️'],['독성 여왕','#8fff64','☠️'],['폭풍 용','#b9a0ff','🐉'],['암흑 기사','#b28cff','⚔️'],['시간 포식자','#ffe58a','⏳'],['심해 괴수','#63aaff','🐙'],['차원 감시자','#e5b5ff','👁️'],['태양의 심판자','#fff0a0','☀️'],['공허의 마왕','#ff6798','👑']
+];
+const enemyKinds=[['슬라임','#70e4a4',1],['박쥐','#b6a1ff',.8],['고블린','#e9ba76',1.15],['골렘','#9eb1c9',1.5],['마도 망령','#f58fce',1.1]];
+let mode='pc',difficulty='normal',running=false,paused=false,gameOver=false,frame=0,last=0,spawnTimer=0,autoSaveTimer=0,toastTimer=0;
+let player, enemies=[], projectiles=[], particles=[], gems=[], floating=[], keys={},mouse={x:W/2,y:H/2,down:false};
+let state,stick={x:0,y:0,active:false,id:null,cx:0,cy:0},touchAttack=false;
+let modalOpen=false, modalKind='', currentChoices=[];
+const difficultyScale={easy:.75,normal:1,hard:1.35,nightmare:1.8};
+function freshSave(){return {mana:0,gold:0,unlocked:['fire','ice','wind','earth','water'],owned:['fire','ice','wind','earth','water'],mastery:{},discoveries:[],totalRuns:0,bestWave:1,permanent:{hp:0,damage:0,speed:0},pityLegend:0,pityTrans:0,history:[]}}
+let save=freshSave();
+try{const s=JSON.parse(localStorage.getItem('arcaneLogSaveV1'));if(s&&s.owned)save={...freshSave(),...s,permanent:{...freshSave().permanent,...s.permanent}}}catch(e){}
+function persist(){try{localStorage.setItem('arcaneLogSaveV1',JSON.stringify(save))}catch(e){}}
+function toast(msg){$('toast').textContent=msg;$('toast').style.display='block';clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').style.display='none',2200)}
+function spell(id){return spells.find(s=>s.id===id)}
+function pickWeighted(list){let total=list.reduce((a,x)=>a+x[1],0),r=Math.random()*total;for(const x of list){r-=x[1];if(r<=0)return x[0]}return list[list.length-1][0]}
+function rarityColor(r){return ({'일반':'#b8c6df','희귀':'#70dfff','영웅':'#c59aff','전설':'#ffd36a','신화':'#ff7299','초월':'#fff1a6'})[r]||'#fff'}
+function startGame(load=false){
+ mode=$('tabletMode').classList.contains('selected')?'tablet':'pc';difficulty=$('difficulty').value;
+ if(!load){save.totalRuns++;state={wave:1,stage:1,level:1,xp:0,xpNeed:30,kills:0,runGold:0,runMana:0,owned:save.unlocked.filter(id=>spell(id)),active:['fire'],cooldowns:{},time:0,shieldUntil:0,invuln:0,combo:0,bossIndex:0};}
+ else {if(!state||!state.owned)state={wave:1,stage:1,level:1,xp:0,xpNeed:30,kills:0,runGold:0,runMana:0,owned:save.unlocked.filter(id=>spell(id)),active:['fire'],cooldowns:{},time:0,shieldUntil:0,invuln:0,combo:0,bossIndex:0};}
+ const perm=save.permanent;
+ player={x:W/2,y:H/2,r:15,hp:100+perm.hp*8,maxHp:100+perm.hp*8,speed:220+perm.speed*5,damage:1+perm.damage*.08,aimX:W/2+1,aimY:H/2,vx:0,vy:0,dash:0,dashCd:0};
+ enemies=[];projectiles=[];particles=[];gems=[];floating=[];spawnTimer=.4;frame=0;last=performance.now();running=true;paused=false;gameOver=false;modalOpen=false;
+ $('startScreen').classList.add('hidden');$('gameScreen').style.display='block';$('touchControls').style.display=mode==='tablet'?'block':'none';$('modalLayer').style.display='none';updateHUD();requestAnimationFrame(loop);toast(mode==='tablet'?'태블릿 모드: 왼쪽으로 이동, 오른쪽 버튼으로 공격':'WASD 이동 · 마우스 공격 · Space 대시');
+}
+function endRun(){running=false;gameOver=true;save.mana+=state.runMana;save.gold+=state.runGold;save.bestWave=Math.max(save.bestWave,state.wave);save.history.unshift({wave:state.wave,kills:state.kills,gold:state.runGold,date:new Date().toLocaleDateString()});save.history=save.history.slice(0,10);persist();showGameOver()}
+function showGameOver(){showModal('runend',`<h2>💫 탐험 종료</h2><p class="muted">이번 탐험에서 얻은 보상을 정산했어.</p><div class="cards"><div class="pick-card"><b>도달 웨이브</b><h2>${state.wave}</h2></div><div class="pick-card"><b>처치한 적</b><h2>${state.kills}</h2></div><div class="pick-card"><b>마력석 획득</b><h2>+${state.runMana}</h2></div><div class="pick-card"><b>골드 획득</b><h2>+${state.runGold}</h2></div></div><div class="row" style="margin-top:16px"><button class="primary" onclick="window.arcane.restart()">다시 도전</button><button onclick="window.arcane.home()">메인 화면</button></div>`)}
+function showModal(kind,html){modalKind=kind;modalOpen=true;paused=true;$('modal').innerHTML=html;$('modalLayer').style.display='flex'}
+function closeModal(){modalOpen=false;$('modalLayer').style.display='none';if(running&&!gameOver)paused=false}
+function home(){running=false;paused=false;$('gameScreen').style.display='none';$('startScreen').classList.remove('hidden');$('modalLayer').style.display='none';persist()}
+function restart(){closeModal();startGame(false)}
+window.arcane={restart,home,close:closeModal,chooseLevel:chooseLevel,drawSummon:drawSummon};
+function showPause(){showModal('pause',`<h2>Ⅱ 일시정지</h2><p class="muted">잠깐 쉬어 가도 좋아.</p><div class="row"><button class="primary" onclick="window.arcane.close()">계속하기</button><button onclick="window.arcane.spells()">마법 관리</button><button onclick="window.arcane.home()">메인 화면</button></div>`)}
+window.arcane.spells=showSpellBook;
+function showSpellBook(){const owned=state?state.owned:save.unlocked;showModal('spells',`<h2>✦ 마법 관리</h2><p class="muted">보유 마법을 장착하거나 숙련도를 확인해.</p><div class="cards">${owned.map(id=>{const s=spell(id);if(!s)return'';return `<button class="pick-card rarity-${s.rarity}" onclick="window.arcane.equip('${id}')"><span class="icon">${s.icon}</span><b>${s.name}</b><small>${s.rarity} · 피해 ${s.damage}<br>${s.desc}</small><small>숙련도 ${save.mastery[id]||0}</small></button>`}).join('')}</div><div class="row" style="margin-top:14px"><button onclick="window.arcane.close()">닫기</button><button class="gold" onclick="window.arcane.summon()">스킬 뽑기</button><button onclick="window.arcane.fusion()">융합 연구</button></div>`)}
+window.arcane.equip=id=>{if(!state.owned.includes(id)){toast('아직 보유하지 않은 마법이야.');return}if(state.active.includes(id)){state.active=state.active.filter(x=>x!==id);toast('장착 해제: '+spell(id).name)}else if(state.active.length<4){state.active.push(id);toast('장착: '+spell(id).name)}else{toast('마법 슬롯은 최대 4개야. 먼저 하나를 해제해.')}showSpellBook()};
+window.arcane.summon=drawSummon;window.arcane.fusion=showFusion;
+function drawSummon(times=1){const cost=times===10?900:100;if(save.mana<cost){showModal('summon',`<h2>🎲 스킬 뽑기</h2><p>마력석이 부족해! 보유: <b>${save.mana}</b> / 필요: ${cost}</p><p class="muted">던전에서 적을 처치하고 마력석을 모아 봐.</p><div class="row"><button onclick="window.arcane.close()">닫기</button><button class="primary" onclick="window.arcane.close();window.arcane.shop()">성장 상점</button></div>`);return}
+ save.mana-=cost;let results=[];
+ for(let i=0;i<times;i++){
+   let rarity=pickWeighted(rarityWeights);
+   if(save.pityLegend>=49&&['일반','희귀','영웅'].includes(rarity))rarity='전설';
+   if(save.pityTrans>=99)rarity='초월';
+   const pool=spells.filter(s=>s.rarity===rarity && (!s.fusion || save.discoveries.includes(s.id)));
+   const selected=(pool.length?pool:spells.filter(s=>s.rarity===rarity))[Math.floor(Math.random()*(pool.length?pool:spells.filter(s=>s.rarity===rarity)).length)]||spells[0];
+   if(rarity==='전설'||rarity==='신화'||rarity==='초월')save.pityLegend=0;else save.pityLegend++;
+   if(rarity==='초월')save.pityTrans=0;else save.pityTrans++;
+   if(!save.unlocked.includes(selected.id)){save.unlocked.push(selected.id);results.push({...selected,new:true});}
+   else {save.mana+=25;results.push({...selected,duplicate:true});}
+ }
+ persist();
+ showModal('summonResult',`<h2>✨ 소환 결과</h2><p class="muted">중복 마법은 마력석 25개로 변환됐어.</p><div class="cards">${results.map(s=>`<div class="pick-card rarity-${s.rarity}"><span class="icon">${s.icon}</span><b style="color:${rarityColor(s.rarity)}">${s.name}</b><small>${s.rarity} · ${s.new?'신규 해금!':s.duplicate?'중복 → 마력석 +25': '획득'}</small></div>`).join('')}</div><p class="tiny">확률: 전설 1% · 신화 0.5% · 초월 0.1% · 천장 진행도 ${save.pityLegend}/50, 초월 ${save.pityTrans}/100</p><div class="row"><button class="primary" onclick="window.arcane.close()">확인</button><button class="gold" onclick="window.arcane.drawSummon(1)">한 번 더 (100)</button><button class="gold" onclick="window.arcane.drawSummon(10)">10회 (900)</button></div>`);
+}
+window.arcane.drawSummon=drawSummon;window.arcane.shop=showShop;
+function showShop(){showModal('shop',`<h2>⬆ 영구 성장</h2><p class="muted">보유 골드: ${save.gold} · 마력석: ${save.mana}</p><div class="cards">
+<button class="pick-card" onclick="window.arcane.buyUpgrade('hp')"><span class="icon">❤️</span><b>최대 체력 +8</b><small>비용 ${100+save.permanent.hp*80} 골드<br>현재 레벨 ${save.permanent.hp}</small></button>
+<button class="pick-card" onclick="window.arcane.buyUpgrade('damage')"><span class="icon">⚔️</span><b>마법 피해 +8%</b><small>비용 ${140+save.permanent.damage*100} 골드<br>현재 레벨 ${save.permanent.damage}</small></button>
+<button class="pick-card" onclick="window.arcane.buyUpgrade('speed')"><span class="icon">💨</span><b>이동 속도 +5</b><small>비용 ${120+save.permanent.speed*90} 골드<br>현재 레벨 ${save.permanent.speed}</small></button>
+<button class="pick-card" onclick="window.arcane.daily()"><span class="icon">🎁</span><b>탐험 보급품</b><small>무료 보급: 마력석 +100<br>1회 받을 수 있어</small></button></div><div class="row" style="margin-top:14px"><button onclick="window.arcane.close()">닫기</button><button class="gold" onclick="window.arcane.summon()">스킬 뽑기</button></div>`)}
+window.arcane.buyUpgrade=key=>{let cost={hp:100+save.permanent.hp*80,damage:140+save.permanent.damage*100,speed:120+save.permanent.speed*90}[key];if(save.gold<cost){toast('골드가 부족해!');return}save.gold-=cost;save.permanent[key]++;persist();showShop();toast('영구 능력이 강화됐어!')};
+window.arcane.daily=()=>{if(save.dailyClaim===new Date().toDateString()){toast('오늘 보급품은 이미 받았어.');return}save.dailyClaim=new Date().toDateString();save.mana+=100;persist();showShop();toast('마력석 100개 획득!')};
+function showFusion(){const available=fusionRecipes.filter(r=>state.owned.includes(r[0])&&state.owned.includes(r[1]));showModal('fusion',`<h2>🧬 마법 융합 연구</h2><p class="muted">두 마법을 모두 보유하면 융합식을 발견할 수 있어. 발견한 마법은 영구 해금돼.</p><div class="cards">${fusionRecipes.map(r=>{const a=spell(r[0]),b=spell(r[1]),c=spell(r[2]),done=save.discoveries.includes(r[2]),can=state.owned.includes(r[0])&&state.owned.includes(r[1]);return `<button class="pick-card ${done?'':'rarity-'+(can?'희귀':'일반')}" ${can&&!done?`onclick="window.arcane.fuse('${r[0]}','${r[1]}','${r[2]}')"`:'disabled'}><span class="icon">${done?c.icon:'❔'}</span><b>${done?c.name:'???'}</b><small>${a.name} + ${b.name}<br>${done?'발견 완료':can?'융합 가능':'재료 마법 필요'}</small></button>`}).join('')}</div><div class="row" style="margin-top:14px"><button onclick="window.arcane.close()">닫기</button></div>`)}
+window.arcane.fuse=(a,b,c)=>{if(!state.owned.includes(a)||!state.owned.includes(b)){toast('재료 마법이 부족해.');return}if(!save.discoveries.includes(c)){save.discoveries.push(c);if(!save.unlocked.includes(c))save.unlocked.push(c);if(!state.owned.includes(c))state.owned.push(c);save.mana+=30;persist();toast('새 융합 마법 해금: '+spell(c).name)}showFusion()};
+function showCodex(){showModal('codex',`<h2>📖 마법 도감</h2><p class="muted">해금 ${save.unlocked.length}/${spells.length} · 융합 발견 ${save.discoveries.length}/20</p><div class="cards">${spells.map(s=>{const known=save.unlocked.includes(s.id)||save.discoveries.includes(s.id);return `<div class="pick-card rarity-${s.rarity}"><span class="icon">${known?s.icon:'❔'}</span><b>${known?s.name:'???'}</b><small>${known?s.rarity+' · '+s.desc:'미발견 마법'}</small></div>`}).join('')}</div><div class="row" style="margin-top:14px"><button onclick="window.arcane.close()">닫기</button><button onclick="window.arcane.fusion()">융합 연구</button></div>`)}
+window.arcane.codex=showCodex;
+function chooseLevel(){const choices=[];const all=spells.filter(s=>state.owned.includes(s.id));for(let i=0;i<3;i++){let s=all[Math.floor(Math.random()*all.length)]||spells[0];choices.push({name:s.name,icon:s.icon,desc:s.desc,action:()=>{if(!state.active.includes(s.id)&&state.active.length<4)state.active.push(s.id);save.mastery[s.id]=(save.mastery[s.id]||0)+1;state.damageBonus=(state.damageBonus||0)+.04;closeModal();toast(s.name+' 숙련도 상승!')}})}
+ choices.push({name:'체력 회복',icon:'❤️',desc:'체력을 40 회복한다.',action:()=>{player.hp=Math.min(player.maxHp,player.hp+40);closeModal()}});
+ showModal('level',`<h2>✨ 레벨 업!</h2><p class="muted">보상 하나를 선택해.</p><div class="cards">${choices.map((c,i)=>`<button class="pick-card" onclick="window.arcane.levelPick(${i})"><span class="icon">${c.icon}</span><b>${c.name}</b><small>${c.desc}</small></button>`).join('')}</div>`);window.arcane.levelChoices=choices}
+window.arcane.levelPick=i=>{const c=window.arcane.levelChoices[i];if(c)c.action();};
+function updateHUD(){$('levelText').textContent='Lv. '+state.level;$('hpFill').style.width=Math.max(0,player.hp/player.maxHp*100)+'%';$('hpText').textContent=Math.ceil(player.hp)+' / '+player.maxHp+' HP';$('stageText').textContent='던전 '+state.stage;$('waveText').textContent='웨이브 '+state.wave;$('manaText').textContent=save.mana+state.runMana;$('goldText').textContent=save.gold+state.runGold;$('killText').textContent=state.kills;$('xpFill').style.width=(state.xp/state.xpNeed*100)+'%'}
+function showFloat(x,y,text,color='#fff'){floating.push({x,y,text,color,life:.8})}
+function burst(x,y,color,n=10){for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,v=35+Math.random()*150;particles.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:.35+Math.random()*.45,color,r:2+Math.random()*3})}}
+function spawnEnemy(boss=false){const side=Math.floor(Math.random()*4);let x,y;if(side===0){x=Math.random()*W;y=-30}else if(side===1){x=W+30;y=Math.random()*H}else if(side===2){x=Math.random()*W;y=H+30}else{x=-30;y=Math.random()*H}
+ const scale=difficultyScale[difficulty],progress=1+state.wave*.13+state.stage*.22;
+ if(boss){let bi=(state.bossIndex++)%bosses.length,b=bosses[bi];enemies.push({x,y,r:31,hp:260*scale*progress,maxHp:260*scale*progress,speed:42+state.wave*1.1,damage:18*scale*progress,color:b[1],name:b[0],icon:b[2],boss:true,shoot:2,knock:0});toast('보스 등장: '+b[0]+'!');return}
+ const k=enemyKinds[Math.floor(Math.random()*enemyKinds.length)];enemies.push({x,y,r:11+Math.random()*4,hp:(24+state.wave*4)*scale*k[2],maxHp:(24+state.wave*4)*scale*k[2],speed:(45+Math.random()*28+state.wave*1.5)*k[2],damage:(7+state.wave*.8)*scale,color:k[1],name:k[0],boss:false,shoot:0,knock:0});
+}
+function nearestEnemy(x,y){let best=null,bd=Infinity;for(const e of enemies){let d=Math.hypot(e.x-x,e.y-y);if(d<bd){bd=d;best=e}}return best}
+function castSpell(id,tx,ty){const s=spell(id);if(!s)return;const now=performance.now();if((state.cooldowns[id]||0)>now)return;state.cooldowns[id]=now+s.cd;
+ if(id==='shield'){state.shieldUntil=now+2500;burst(player.x,player.y,s.color,18);showFloat(player.x,player.y-30,'결계!',s.color);return}
+ if(id==='timefreeze'){for(const e of enemies)e.frozen=now+1800;burst(player.x,player.y,'#b8e8ff',25);showFloat(player.x,player.y-35,'시간 정지!',s.color);return}
+ if(id==='phoenix'){player.hp=Math.min(player.maxHp,player.hp+25);for(const e of enemies){if(Math.hypot(e.x-player.x,e.y-player.y)<250)hitEnemy(e,s.damage*player.damage)}burst(player.x,player.y,s.color,30);return}
+ if(id==='earth'||id==='gravity'||id==='blackhole'||id==='bloodmoon'||id==='creation'||id==='collapse'||id==='steam'||id==='toxicfire'||id==='plasma'||id==='froststorm'||id==='judgment'||id==='meteor'||id==='sunbeam'||id==='thorns'||id==='frostlightning'){
+   const radius=({earth:90,gravity:150,blackhole:190,bloodmoon:160,creation:260,collapse:175,steam:110,toxicfire:120,plasma:130,froststorm:140,judgment:210,meteor:145,sunbeam:180,thorns:130,frostlightning:125})[id]||100;
+   const x=tx||player.x,y=ty||player.y;burst(x,y,s.color,30);
+   for(const e of enemies){if(Math.hypot(e.x-x,e.y-y)<radius)hitEnemy(e,s.damage*player.damage*(id==='creation'?1.2:1))}
+   if(id==='bloodmoon'){player.hp=Math.max(1,player.hp-12)}if(id==='gravity'||id==='blackhole'||id==='collapse'){for(const e of enemies){if(Math.hypot(e.x-x,e.y-y)<radius){e.x=x+(e.x-x)*.55;e.y=y+(e.y-y)*.55}}}
+   if(id==='shield')state.shieldUntil=now+2500;return;
+ }
+ const target=nearestEnemy(player.x,player.y);if(!target){burst(player.x,player.y,s.color,5);return}
+ let dx=target.x-player.x,dy=target.y-player.y,d=Math.hypot(dx,dy)||1;projectiles.push({x:player.x,y:player.y,vx:dx/d*420,vy:dy/d*420,r:id==='dragon'?11:7,damage:s.damage*player.damage*(1+(state.damageBonus||0)),life:1.8,color:s.color,spell:id,pierce:['ice','light','arcane','dragon','sunbeam'].includes(id)?3:0,homing:['spirit','dragon'].includes(id)});
+}
+function hitEnemy(e,dmg){if(!enemies.includes(e))return;e.hp-=dmg;showFloat(e.x,e.y-e.r,String(Math.round(dmg)),e.color);burst(e.x,e.y,e.color,3);if(e.hp<=0){const i=enemies.indexOf(e);if(i>=0)enemies.splice(i,1);state.kills++;state.runGold+=e.boss?80:4+Math.floor(Math.random()*4);state.runMana+=e.boss?35:Math.random()<.25?2:0;gems.push({x:e.x,y:e.y,r:e.boss?8:5,xp:e.boss?45:8});if(e.boss){state.wave++;state.stage=Math.floor((state.wave-1)/5)+1;save.discoveries.forEach(id=>{});toast('보스 처치! 보상 획득');}persist()}}
+function takeDamage(d){if(performance.now()<state.invuln)return;if(performance.now()<state.shieldUntil)d*=.3;player.hp-=d;state.invuln=performance.now()+600;burst(player.x,player.y,'#ff607d',10);if(player.hp<=0){player.hp=0;updateHUD();endRun()}}
+function collect(){for(let i=gems.length-1;i>=0;i--){const g=gems[i];if(Math.hypot(g.x-player.x,g.y-player.y)<player.r+g.r+5){state.xp+=g.xp;gems.splice(i,1);if(state.xp>=state.xpNeed){state.xp-=state.xpNeed;state.level++;state.xpNeed=Math.floor(state.xpNeed*1.28+8);player.maxHp+=4;player.hp=Math.min(player.maxHp,player.hp+12);$('levelBanner').style.display='block';setTimeout(()=>$('levelBanner').style.display='none',900);chooseLevel()}}}}
+function loop(now){if(!running)return;requestAnimationFrame(loop);const dt=Math.min(.035,(now-last)/1000||0);last=now;if(!paused&&!gameOver)update(dt,now);render();if(!paused&&!gameOver){autoSaveTimer+=dt;if(autoSaveTimer>8){persist();autoSaveTimer=0}}}
+function update(dt,now){frame++;state.time+=dt;spawnTimer-=dt;if(spawnTimer<=0&&enemies.length<Math.min(38,8+state.wave*1.5)){let boss=state.wave%5===0&&!enemies.some(e=>e.boss);spawnEnemy(boss);spawnTimer=Math.max(.25,1.25-state.wave*.025)}
+ let mx=0,my=0;if(mode==='pc'){if(keys.KeyW||keys.ArrowUp)my--;if(keys.KeyS||keys.ArrowDown)my++;if(keys.KeyA||keys.ArrowLeft)mx--;if(keys.KeyD||keys.ArrowRight)mx++;}else{mx=stick.x;my=stick.y}
+ let l=Math.hypot(mx,my);if(l>1){mx/=l;my/=l}if(player.dash>0){player.x+=player.vx*dt;player.y+=player.vy*dt;player.dash-=dt}else{player.x+=mx*player.speed*dt;player.y+=my*player.speed*dt}
+ player.x=Math.max(player.r,Math.min(W-player.r,player.x));player.y=Math.max(50,Math.min(H-player.r,player.y));if(player.dashCd>0)player.dashCd-=dt;
+ for(const e of enemies){if(e.frozen>now)continue;let dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1;if(e.knock>0){e.x-=dx/d*e.knock*dt;e.y-=dy/d*e.knock*dt;e.knock-=dt*60}else{e.x+=dx/d*e.speed*dt;e.y+=dy/d*e.speed*dt}if(d<e.r+player.r){takeDamage(e.damage*dt*2.2);if(e.boss&&Math.random()<.008){projectiles.push({x:e.x,y:e.y,vx:dx/d*-130,vy:dy/d*-130,r:7,damage:e.damage*.7,life:2,color:e.color,enemy:true})}}}
+ for(let i=projectiles.length-1;i>=0;i--){const p=projectiles[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;if(p.homing){const t=nearestEnemy(p.x,p.y);if(t){const d=Math.hypot(t.x-p.x,t.y-p.y)||1;p.vx+=(t.x-p.x)/d*100*dt;p.vy+=(t.y-p.y)/d*100*dt;const v=Math.hypot(p.vx,p.vy)||1;p.vx=p.vx/v*420;p.vy=p.vy/v*420}}
+ if(p.enemy&&Math.hypot(p.x-player.x,p.y-player.y)<player.r+p.r){takeDamage(p.damage);projectiles.splice(i,1);continue}
+ if(!p.enemy){let hit=false;for(const e of enemies){if(Math.hypot(p.x-e.x,p.y-e.y)<e.r+p.r){hitEnemy(e,p.damage);if(p.pierce>0)p.pierce--;else hit=true;break}}if(hit){projectiles.splice(i,1);continue}}
+ if(p.life<=0||p.x<-50||p.x>W+50||p.y<-50||p.y>H+50)projectiles.splice(i,1)}
+ for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;p.vx*=.97;p.vy*=.97}particles=particles.filter(p=>p.life>0);
+ for(const f of floating){f.y-=25*dt;f.life-=dt}floating=floating.filter(f=>f.life>0);
+ collect();if(mode==='pc'&&mouse.down&&now-(state.lastMouse||0)>130){castSpell(state.active[0]||'fire',mouse.x,mouse.y);state.lastMouse=now}
+ if(mode==='tablet'&&touchAttack&&now-(state.lastTouch||0)>430){castSpell(state.active[0]||'fire');state.lastTouch=now}
+ updateHUD()}
+function render(){ctx.clearRect(0,0,W,H);const bg=ctx.createLinearGradient(0,0,W,H);bg.addColorStop(0,'#111a32');bg.addColorStop(1,'#080d1a');ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+ // arena grid
+ ctx.save();ctx.strokeStyle='#52648a18';ctx.lineWidth=1;const spacing=42,offset=(frame*.18)%spacing;for(let x=0;x<W;x+=spacing){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}for(let y=0;y<H;y+=spacing){ctx.beginPath();ctx.moveTo(0,y+offset);ctx.lineTo(W,y+offset);ctx.stroke()}ctx.restore();
+ for(const g of gems){ctx.fillStyle='#7fe7ff';ctx.beginPath();ctx.arc(g.x,g.y,g.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#e5fbff';ctx.stroke()}
+ for(const p of projectiles){ctx.save();ctx.shadowBlur=18;ctx.shadowColor=p.color;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();ctx.restore()}
+ for(const e of enemies){ctx.save();ctx.shadowBlur=e.boss?24:8;ctx.shadowColor=e.color;ctx.fillStyle=e.color;ctx.beginPath();ctx.arc(e.x,e.y,e.r,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;ctx.fillStyle='#10172b';ctx.beginPath();ctx.arc(e.x-e.r*.28,e.y-e.r*.1,Math.max(2,e.r*.12),0,Math.PI*2);ctx.arc(e.x+e.r*.28,e.y-e.r*.1,Math.max(2,e.r*.12),0,Math.PI*2);ctx.fill();ctx.fillStyle='#293656';ctx.fillRect(e.x-e.r,e.y-e.r-9,e.r*2,4);ctx.fillStyle=e.boss?'#ff617b':'#8dffb3';ctx.fillRect(e.x-e.r,e.y-e.r-9,e.r*2*Math.max(0,e.hp/e.maxHp),4);if(e.boss){ctx.fillStyle='#fff';ctx.font='12px system-ui';ctx.textAlign='center';ctx.fillText(e.name,e.x,e.y-e.r-15)}ctx.restore()}
+ for(const p of particles){ctx.globalAlpha=Math.max(0,p.life*1.7);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1;
+ for(const f of floating){ctx.globalAlpha=Math.min(1,f.life*2);ctx.fillStyle=f.color;ctx.font='bold 13px system-ui';ctx.textAlign='center';ctx.fillText(f.text,f.x,f.y)}ctx.globalAlpha=1;
+ if(player){ctx.save();if(performance.now()<state.shieldUntil){ctx.strokeStyle='#9deaff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(player.x,player.y,player.r+9,0,Math.PI*2);ctx.stroke()}ctx.shadowBlur=22;ctx.shadowColor='#88b9ff';ctx.fillStyle=performance.now()<state.invuln?'#ffffff':'#b9d7ff';ctx.beginPath();ctx.arc(player.x,player.y,player.r,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;ctx.fillStyle='#5b67a4';ctx.beginPath();ctx.arc(player.x+4,player.y-3,5,0,Math.PI*2);ctx.fill();ctx.restore()}
+ // active spell indicators
+ if(state&&state.active){ctx.font='12px system-ui';ctx.textAlign='center';state.active.slice(0,4).forEach((id,i)=>{const s=spell(id);ctx.fillStyle='#101a31cc';ctx.fillRect(W/2-100+i*52,H-45,46,34);ctx.strokeStyle=s.color;ctx.strokeRect(W/2-100+i*52,H-45,46,34);ctx.fillStyle='#fff';ctx.font='19px system-ui';ctx.fillText(s.icon,W/2-77+i*52,H-22)})}
+}
+function dash(){if(!player||player.dashCd>0)return;let dx=0,dy=0;if(mode==='pc'){if(keys.KeyW)dy--;if(keys.KeyS)dy++;if(keys.KeyA)dx--;if(keys.KeyD)dx++;}else{dx=stick.x;dy=stick.y}let l=Math.hypot(dx,dy);if(l<.1){const e=nearestEnemy(player.x,player.y);if(e){dx=player.x-e.x;dy=player.y-e.y;l=Math.hypot(dx,dy)}else{dx=1;dy=0;l=1}}player.vx=dx/l*620;player.vy=dy/l*620;player.dash=.16;player.dashCd=2.2;state.invuln=performance.now()+350;burst(player.x,player.y,'#8ceaff',12)}
+function castActive(){if(!state.active.length)return;let idx=state.active.length>1?Math.floor(Math.random()*state.active.length):0;castSpell(state.active[idx])}
+function menuQuick(){showModal('quick',`<h2>게임 메뉴</h2><div class="cards"><button class="pick-card" onclick="window.arcane.close();window.arcane.spells()"><span class="icon">✦</span><b>마법 관리</b><small>마법 장착·숙련도</small></button><button class="pick-card" onclick="window.arcane.summon()"><span class="icon">🎲</span><b>스킬 뽑기</b><small>마력석 ${save.mana}개</small></button><button class="pick-card" onclick="window.arcane.codex()"><span class="icon">📖</span><b>마법 도감</b><small>발견한 마법 확인</small></button><button class="pick-card" onclick="window.arcane.shop()"><span class="icon">⬆️</span><b>영구 성장</b><small>영구 능력 강화</small></button></div><div class="row" style="margin-top:14px"><button class="primary" onclick="window.arcane.close()">계속하기</button><button onclick="window.arcane.home()">메인 화면</button></div>`)}
+$('pcMode').onclick=()=>{$('pcMode').classList.add('selected');$('tabletMode').classList.remove('selected')};
+$('tabletMode').onclick=()=>{$('tabletMode').classList.add('selected');$('pcMode').classList.remove('selected')};
+$('startBtn').onclick=()=>startGame(false);
+$('continueBtn').onclick=()=>{startGame(false);showModal('continue',`<h2>저장 데이터</h2><p>영구 재화와 해금 마법은 자동 저장되어 있어. 새로운 탐험을 시작할까?</p><div class="row"><button class="primary" onclick="window.arcane.close()">탐험 시작</button><button onclick="window.arcane.home()">취소</button></div>`)};
+$('resetSave').onclick=()=>{if(confirm('모든 저장 데이터를 초기화할까?')){save=freshSave();persist();toast('저장 데이터를 초기화했어.')}};
+$('pauseBtn').onclick=showPause;$('spellBookBtn').onclick=showSpellBook;$('summonBtn').onclick=()=>drawSummon(1);$('codexBtn').onclick=showCodex;$('shopBtn').onclick=showShop;
+$('touchAttack').addEventListener('pointerdown',e=>{e.preventDefault();touchAttack=true});['pointerup','pointercancel','pointerleave'].forEach(ev=>$('touchAttack').addEventListener(ev,e=>{e.preventDefault();touchAttack=false}));
+$('touchDash').addEventListener('pointerdown',e=>{e.preventDefault();dash()});$('touchSkill').addEventListener('pointerdown',e=>{e.preventDefault();castActive()});$('touchMenu').addEventListener('pointerdown',e=>{e.preventDefault();menuQuick()});
+const base=$('stickBase'),knob=$('stickKnob');
+base.addEventListener('pointerdown',e=>{e.preventDefault();stick.active=true;stick.id=e.pointerId;const r=base.getBoundingClientRect();stick.cx=r.left+r.width/2;stick.cy=r.top+r.height/2;base.setPointerCapture(e.pointerId);moveStick(e)});
+base.addEventListener('pointermove',e=>{if(stick.active&&e.pointerId===stick.id){e.preventDefault();moveStick(e)}});
+function moveStick(e){let dx=e.clientX-stick.cx,dy=e.clientY-stick.cy,l=Math.hypot(dx,dy),max=38;if(l>max){dx=dx/l*max;dy=dy/l*max}stick.x=dx/max;stick.y=dy/max;knob.style.transform=`translate(${dx}px,${dy}px)`}
+function endStick(e){if(stick.active&&e.pointerId===stick.id){stick.active=false;stick.id=null;stick.x=0;stick.y=0;knob.style.transform='translate(0,0)'}}
+base.addEventListener('pointerup',endStick);base.addEventListener('pointercancel',endStick);
+addEventListener('keydown',e=>{keys[e.code]=true;if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();if(!running)return;if(e.code==='Escape'){if(modalOpen)closeModal();else showPause()}if(e.code==='Space')dash();if(e.code==='KeyE')castActive();if(e.code==='Digit1'&&state.active[0])castSpell(state.active[0]);if(e.code==='Digit2'&&state.active[1])castSpell(state.active[1]);if(e.code==='KeyF')showFusion()});
+addEventListener('keyup',e=>keys[e.code]=false);
+canvas.addEventListener('pointermove',e=>{const r=canvas.getBoundingClientRect();mouse.x=e.clientX-r.left;mouse.y=e.clientY-r.top;if(mode==='pc'){player&&(player.aimX=mouse.x,player.aimY=mouse.y)}});
+canvas.addEventListener('pointerdown',e=>{if(mode==='pc'&&e.button===0){mouse.down=true;const r=canvas.getBoundingClientRect();mouse.x=e.clientX-r.left;mouse.y=e.clientY-r.top}});
+addEventListener('pointerup',e=>{if(e.pointerType==='mouse')mouse.down=false});
+$('modalLayer').addEventListener('pointerdown',e=>{if(e.target===$('modalLayer')&&modalKind==='pause')closeModal()});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&running&&!paused)showPause()});
+window.addEventListener('beforeunload',persist);
+persist();
+})();
+</script>
+</body>
+</html>
